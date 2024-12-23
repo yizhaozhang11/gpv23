@@ -11,12 +11,12 @@
 
 std::chrono::time_point<std::chrono::system_clock> start;
 
-// constexpr size_t p = 12289;
-// constexpr size_t gp = 11;
-constexpr size_t p = 97;
-constexpr size_t gp = 5;
+constexpr size_t p = 12289;
+constexpr size_t gp = 11;
+// constexpr size_t p = 97;
+// constexpr size_t gp = 5;
 
-constexpr size_t N = 16;
+constexpr size_t N = 1024;
 constexpr size_t Ncyc = N * 2;
 
 using NTT1 = CircNTT<NTT23<562896521097217LL, 5LL, p, gp>>;
@@ -32,8 +32,8 @@ using VecN = std::array<uint64_t, N>;
 using Z = Zp<p>;
 
 constexpr size_t rN = Z::Pow(gp, (p - 1) / Ncyc);
-constexpr size_t rho = 4;
-constexpr size_t Rx = 4;
+constexpr size_t rho = 32;
+constexpr size_t Rx = 32;
 constexpr uint64_t zeta = Z::Pow(rN, rho);
 
 VecN PartialFourierTransform(VecN a, size_t rho) {
@@ -142,7 +142,7 @@ Ct EvalInnerProduct(const GaloisKey &Kg, Ct ct, std::vector<RGSWCiphertext<DCRT>
 }
 
 RLWEGadgetCiphertext<DCRT> EvalInnerProduct(const GaloisKey &Kg, std::vector<RGSWCiphertext<DCRT>>::iterator z, std::vector<uint64_t>::iterator a, size_t l, size_t stride) {
-    RLWEGadgetCiphertext ct = z[0][1];
+    RLWEGadgetCiphertext<DCRT> ct = z[0][1];
     return EvalInnerProduct(Kg, ct, z + stride, a[0], a + 1, l - 1, stride);
 }
 
@@ -302,7 +302,8 @@ int main() {
 
     START_TIMER;
 
-    Poly<p> bt_poly = {0, 1};
+    Poly<p> bt_poly;
+    bt_poly.a[1] = 1;
     DCRT at, bt{bt_poly};
     for (size_t j = 0; j < DCRT::N; j++) {
         bt.a[0][j] = NTT1::Z::Mul(bt.a[0][j], NTT1::Z::Mul(NTT1::p / 4, DCRT::D_factors[0][0]));
