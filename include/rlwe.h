@@ -156,19 +156,14 @@ void DecryptAndPrint(const RLWEGadgetCiphertext<DCRT> &c, const DCRT &s) {
 }
 
 template <typename DCRT>
-size_t DecryptAndPrintE(const RLWECiphertext<DCRT> &c, const DCRT &s) {
+void DecryptAndTest(const RLWECiphertext<DCRT> &c, const DCRT &s, const uint64_t t_plain, const Poly<DCRT::N> &bt_poly, size_t b) {
     auto m = (c[1] - c[0] * s).template ModulusSwitch<typename DCRT::template NTTi<0>>();
-    size_t j = DCRT::N;
     for (size_t i = 0; i < DCRT::N; i++) {
-        if (std::min((uint64_t)m.a[i], DCRT::p[0] - m.a[i]) > 10) {
-            if (j != DCRT::N) {
-                throw std::runtime_error("Invalid RLWE ciphertext");
-            }
-            // std::cout << "[" << i << "] " << m.a[i] << std::endl;
-            j = i;
+        auto z = (m.a[i] * t_plain + DCRT::p[0] / 2) / DCRT::p[0] % t_plain;
+        if (z != (uint64_t)bt_poly.a[(i + b) % DCRT::N]) {
+            std::cout << "Error: " << i << " " << z << " " << bt_poly.a[i] << std::endl;
         }
     }
-    return j;
 }
 
 #endif // RLWE_H

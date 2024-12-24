@@ -36,6 +36,8 @@ constexpr size_t rho = 32;
 constexpr size_t Rx = 32;
 constexpr uint64_t zeta = Z::Pow(rN, rho);
 
+constexpr uint64_t t_plain = 1 << 8;
+
 VecN PartialFourierTransform(VecN a, size_t rho) {
     size_t n = a.size();
     for (size_t i = n; i > rho; i >>= 1) {
@@ -303,10 +305,12 @@ int main() {
     START_TIMER;
 
     Poly<p> bt_poly;
-    bt_poly.a[1] = 1;
+    for (size_t i = 0; i < N; i++) {
+        bt_poly.a[i] = rand() % t_plain;
+    }
     DCRT at, bt{bt_poly};
     for (size_t j = 0; j < DCRT::N; j++) {
-        bt.a[0][j] = NTT1::Z::Mul(bt.a[0][j], NTT1::Z::Mul(NTT1::p / 4, DCRT::D_factors[0][0]));
+        bt.a[0][j] = NTT1::Z::Mul(bt.a[0][j], NTT1::Z::Mul(NTT1::p / t_plain, DCRT::D_factors[0][0]));
         for (size_t i = 1; i < DCRT::ell; i++) {
             bt.a[i][j] = 0;
         }
@@ -319,9 +323,8 @@ int main() {
     END_TIMER;
 
     for (size_t i = 0; i < N; i++) {
-        std::cout << DecryptAndPrintE(zPFT[i], s) << " ";
+        DecryptAndTest(zPFT[i], s, t_plain, bt_poly, (b0[i] - b[i] + p) % p);
     }
-    std::cout << std::endl;
 
     return 0;
 }
